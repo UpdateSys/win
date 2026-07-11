@@ -1,6 +1,6 @@
 # This script is hosted on https://get.activated.win for https://massgrave.dev
 
-# Having trouble launching this script? Check https://massgrave.dev for help.
+# Having trouble launching this script? Check https://massgrave.dev for help.ccccccccccc
 
 
 if (-not $args) {
